@@ -6,7 +6,7 @@ const { PORT = 3000 } = process.env;
 const app = express();
 
 // подключаемся к серверу MongoiDB
-mongoose.connect("mongodb://localhost:27017/mydb");
+mongoose.connect("mongodb://localhost:27017/mestodb");
 
 // подключаем мидлвары, роуты и всё остальное...
 

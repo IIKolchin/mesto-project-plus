@@ -1,14 +1,20 @@
-// // controllers/users.js
+import { Request, Response } from "express";
+import User from "../models/user";
 
-// const User = require('../models/user');
+export const getUsers = (req: Request, res: Response) =>
+  User.find({})
+    .then((users) => res.send({ data: users }))
+    .catch((err) => res.status(500).send({ message: err.message }));
 
-// module.exports.createUser = (req, res) => {
-//   // хешируем пароль
-//   bcrypt.hash(req.body.password, 10)
-//     .then(hash => User.create({
-//       email: req.body.email,
-//       password: hash, // записываем хеш в базу
-//     }))
-//     .then((user) => res.send(user))
-//     .catch((err) => res.status(400).send(err));
-// };
+export const getUsersById = (req: Request, res: Response) =>
+  User.findById(req.params._id)
+    .then((users) => res.send({ data: users }))
+    .catch((err) => res.status(500).send({ message: err.message }));
+
+export const createUser = (req: Request, res: Response) => {
+  const { name, about, avatar } = req.body;
+
+  return User.create({ name, about, avatar })
+    .then((user) => res.send({ data: user }))
+    .catch((err) => res.status(500).send({ message: err.message }));
+};
