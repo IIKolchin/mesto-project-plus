@@ -1,12 +1,5 @@
 import { model, Schema } from "mongoose";
-
-interface ICard {
-  name: string;
-  link: string;
-  owner: Schema.Types.ObjectId;
-  likes: Schema.Types.ObjectId[];
-  createdAt: Date;
-}
+import { ICard } from "../types/index";
 
 const cardSchema = new Schema<ICard>({
   name: {

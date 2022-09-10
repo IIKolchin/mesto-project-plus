@@ -1,27 +1,34 @@
 import { Request, Response } from "express";
 import isURL from "../utils/index";
 import Card from "../models/card";
+import {
+  INTERNAL_SERVER_ERROR,
+  BAD_REQUEST_ERROR,
+  NOT_FOUND_ERROR,
+} from "../utils/constants";
 
 export const getCards = (_req: Request, res: Response) =>
   Card.find({}, { __v: 0 })
     .then((cards) => res.send(cards))
-    .catch((err) => res.status(500).send({ message: err.message }));
+    .catch((err) =>
+      res.status(INTERNAL_SERVER_ERROR).send({ message: err.message })
+    );
 
-export const createCard = (req: any, res: Response) => {
+export const createCard = (req: Request, res: Response) => {
   const { name, link } = req.body;
   const id = req.user._id;
   if (!isURL(link))
-    return res.status(400).send({
+    return res.status(BAD_REQUEST_ERROR).send({
       message: "Переданы некорректные данные при создании карточки",
     });
   return Card.create({ name, link, owner: id })
     .then((card) => res.send(card))
     .catch((err) => {
       if (err.message.includes("card validation failed"))
-        return res.status(400).send({
+        return res.status(BAD_REQUEST_ERROR).send({
           message: "Переданы некорректные данные при создании карточки",
         });
-      return res.status(500).send({ message: err.message });
+      return res.status(INTERNAL_SERVER_ERROR).send({ message: err.message });
     });
 };
 
@@ -30,38 +37,52 @@ export const deleteCard = (req: Request, res: Response) =>
     .then((card) => {
       if (!card)
         return res
-          .status(404)
+          .status(NOT_FOUND_ERROR)
           .send({ message: "Запрашиваемая карточка не найдена" });
       return res.send({ data: card });
     })
-    .catch((err) => res.status(500).send({ message: err.message }));
+    .catch((err) =>
+      res.status(INTERNAL_SERVER_ERROR).send({ message: err.message })
+    );
 
-export const likeCard = (req: any, res: Response) =>
+export const likeCard = (req: Request, res: Response) =>
   Card.findByIdAndUpdate(
     req.params.cardId,
     { $addToSet: { likes: req.user._id } },
-    { new: true }
+    { new: true, runValidators: true }
   )
     .then((card) => {
       if (!card)
         return res
-          .status(404)
+          .status(NOT_FOUND_ERROR)
           .send({ message: "Передан несуществующий _id карточки" });
       return res.send(card);
     })
-    .catch((err) => res.status(500).send({ message: err.message }));
+    .catch((err) => {
+      if (err.message.includes("Cast to ObjectId"))
+        return res.status(BAD_REQUEST_ERROR).send({
+          message: "Переданы некорректные данные для постановки лайка",
+        });
+      return res.status(INTERNAL_SERVER_ERROR).send({ message: err.message });
+    });
 
-export const dislikeCard = (req: any, res: Response) =>
+export const dislikeCard = (req: Request, res: Response) =>
   Card.findByIdAndUpdate(
     req.params.cardId,
     { $pull: { likes: req.user._id } },
-    { new: true }
+    { new: true, runValidators: true }
   )
     .then((card) => {
       if (!card)
         return res
-          .status(404)
+          .status(NOT_FOUND_ERROR)
           .send({ message: "Передан несуществующий _id карточки" });
       return res.send(card);
     })
-    .catch((err) => res.status(500).send({ message: err.message }));
+    .catch((err) => {
+      if (err.message.includes("Cast to ObjectId"))
+        return res
+          .status(BAD_REQUEST_ERROR)
+          .send({ message: "Переданы некорректные данные для снятия лайка" });
+      return res.status(INTERNAL_SERVER_ERROR).send({ message: err.message });
+    });

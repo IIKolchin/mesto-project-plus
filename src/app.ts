@@ -1,4 +1,4 @@
-import express from "express";
+import express, { Request, Response } from "express";
 import mongoose from "mongoose";
 import usersRouter from "./routes/users";
 import cardsRouter from "./routes/cards";
@@ -11,7 +11,7 @@ app.use(express.urlencoded({ extended: true }));
 
 mongoose.connect("mongodb://localhost:27017/mestodb");
 
-app.use((req: any, res, next) => {
+app.use((req: Request, res: Response, next) => {
   req.user = {
     _id: "631a07baa31e2106a27a9876",
   };
@@ -22,6 +22,4 @@ app.use((req: any, res, next) => {
 app.use("/users", usersRouter);
 app.use("/cards", cardsRouter);
 
-app.listen(PORT, () => {
-  console.log(`App listening on port ${PORT}`);
-});
+app.listen(PORT);
