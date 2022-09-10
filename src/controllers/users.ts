@@ -1,14 +1,21 @@
 import { Request, Response } from "express";
+import isURL from "../utils/index";
 import User from "../models/user";
 
 export const getUsers = (req: Request, res: Response) =>
-  User.find({})
-    .then((users) => res.send({ data: users }))
+  User.find({}, { __v: 0 })
+    .then((users) => res.send(users))
     .catch((err) => res.status(500).send({ message: err.message }));
 
 export const getUserById = (req: any, res: Response) => {
-  User.findById(req.params.userId)
-    .then((users) => res.send({ data: users }))
+  User.findById(req.params.userId, { __v: 0 })
+    .then((user) => {
+      if (!user)
+        return res
+          .status(404)
+          .send({ message: "Запрашиваемый пользователь не найден" });
+      return res.send(user);
+    })
     .catch((err) => res.status(500).send({ message: err.message }));
 };
 
@@ -17,37 +24,61 @@ export const createUser = (req: Request, res: Response) => {
 
   return User.create({ name, about, avatar })
     .then((user) => res.send(user))
-    .catch((err) => res.status(500).send({ message: err.message }));
+    .catch((err) => {
+      if (err.message.includes("user validation failed"))
+        return res.status(400).send({
+          message: "Переданы некорректные данные при создании пользователя",
+        });
+      return res.status(500).send({ message: err.message });
+    });
 };
 
-export const updateUser = (req: Request, res: Response) => {
+export const updateUser = (req: any, res: Response) => {
   const { name, about } = req.body;
+  const id = req.user._id;
 
   return User.findByIdAndUpdate(
-    req.params.userId,
+    id,
     { name, about },
     {
       new: true,
       runValidators: true,
-      upsert: true,
     }
   )
-    .then((user) => res.send(user))
-    .catch((err) => res.status(500).send({ message: err.message }));
+    .then((user) => {
+      if (!user)
+        return res.status(404).send({ message: "Пользователь не найден" });
+      return res.send(user);
+    })
+    .catch((err) => {
+      if (err.message.includes("Validation failed"))
+        return res.status(400).send({
+          message: "Переданы некорректные данные при обновлении профиля",
+        });
+      return res.status(500).send({ message: err.message });
+    });
 };
 
-export const updateAvatar = (req: Request, res: Response) => {
+export const updateAvatar = (req: any, res: Response) => {
   const { avatar } = req.body;
-
+  const id = req.user._id;
+  if (!isURL(avatar))
+    return res.status(400).send({
+      message: "Переданы некорректные данные при обновлении аватара",
+    });
   return User.findByIdAndUpdate(
-    req.params.userId,
+    id,
     { avatar },
     {
       new: true,
       runValidators: true,
-      upsert: true,
     }
   )
-    .then((user) => res.send(user))
+    .then((user) => {
+      if (!user)
+        return res.status(404).send({ message: "Пользователь не найден" });
+
+      return res.send(user);
+    })
     .catch((err) => res.status(500).send({ message: err.message }));
 };
