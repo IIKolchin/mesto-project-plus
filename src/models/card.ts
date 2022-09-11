@@ -1,25 +1,26 @@
-import { model, Schema } from "mongoose";
-import { ICard } from "../types/index";
+import { model, Schema } from 'mongoose';
+import { ICard } from '../types';
 
 const cardSchema = new Schema<ICard>(
   {
     name: {
       type: String,
-      required: true,
-      minlength: 2,
-      maxlength: 30,
+      required: [true, 'Обязательное поле'],
+      minlength: [2, 'Должно быть не менее 2 символов'],
+      maxlength: [30, 'Должно быть не более 30 символов'],
     },
     link: {
       type: String,
-      required: true,
+      required: [true, 'Обязательное поле'],
     },
     owner: {
       type: Schema.Types.ObjectId,
-      ref: "user",
-      required: true,
+      ref: 'user',
+      required: [true, 'Обязательное поле'],
     },
     likes: {
       type: [Schema.Types.ObjectId],
+      ref: 'user',
       default: [],
     },
     createdAt: {
@@ -27,7 +28,7 @@ const cardSchema = new Schema<ICard>(
       default: Date.now,
     },
   },
-  { versionKey: false }
+  { versionKey: false },
 );
 
-export default model<ICard>("card", cardSchema);
+export default model<ICard>('card', cardSchema);
