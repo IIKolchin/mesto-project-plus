@@ -6,20 +6,22 @@ import {
   BAD_REQUEST_ERROR,
   NOT_FOUND_ERROR,
 } from '../utils/constants';
+import { IUserRequest, SessionRequest } from '../types';
 
 export const getCards = (_req: Request, res: Response) => Card.find({})
   .then((cards) => res.send(cards))
   .catch(() => res.status(INTERNAL_SERVER_ERROR).send({ message: 'Произошла ошибка' }));
 
-export const createCard = (req: Request, res: Response) => {
+export const createCard = (req: SessionRequest, res: Response) => {
   const { name, link } = req.body;
-  const id = req.user._id;
+  const { _id } = req.user as IUserRequest;
   if (!isURL(link)) {
     return res.status(BAD_REQUEST_ERROR).send({
       message: 'Переданы некорректные данные при создании карточки',
     });
   }
-  return Card.create({ name, link, owner: id })
+  return Card.create({ name, link, owner: _id })
+    .then((card) => card.populate('owner'))
     .then((card) => res.send(card))
     .catch((err) => {
       if (err.name === 'ValidationError') {
@@ -55,50 +57,56 @@ export const deleteCard = (req: Request, res: Response) => Card.findByIdAndRemov
       .send({ message: 'Произошла ошибка' });
   });
 
-export const likeCard = (req: Request, res: Response) => Card.findByIdAndUpdate(
-  req.params.cardId,
-  { $addToSet: { likes: req.user._id } },
-  { new: true, runValidators: true },
-)
-  .then((card) => {
-    if (!card) {
+export const likeCard = (req: SessionRequest, res: Response) => {
+  const { _id } = req.user as IUserRequest;
+  return Card.findByIdAndUpdate(
+    req.params.cardId,
+    { $addToSet: { likes: _id } },
+    { new: true, runValidators: true },
+  )
+    .then((card) => {
+      if (!card) {
+        return res
+          .status(NOT_FOUND_ERROR)
+          .send({ message: 'Передан несуществующий _id карточки' });
+      }
+      return res.send(card);
+    })
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        return res.status(BAD_REQUEST_ERROR).send({
+          message: 'Переданы некорректные данные для постановки лайка',
+        });
+      }
       return res
-        .status(NOT_FOUND_ERROR)
-        .send({ message: 'Передан несуществующий _id карточки' });
-    }
-    return res.send(card);
-  })
-  .catch((err) => {
-    if (err.name === 'CastError') {
-      return res.status(BAD_REQUEST_ERROR).send({
-        message: 'Переданы некорректные данные для постановки лайка',
-      });
-    }
-    return res
-      .status(INTERNAL_SERVER_ERROR)
-      .send({ message: 'Произошла ошибка' });
-  });
+        .status(INTERNAL_SERVER_ERROR)
+        .send({ message: 'Произошла ошибка' });
+    });
+};
 
-export const dislikeCard = (req: Request, res: Response) => Card.findByIdAndUpdate(
-  req.params.cardId,
-  { $pull: { likes: req.user._id } },
-  { new: true, runValidators: true },
-)
-  .then((card) => {
-    if (!card) {
+export const dislikeCard = (req: SessionRequest, res: Response) => {
+  const { _id } = req.user as IUserRequest;
+  return Card.findByIdAndUpdate(
+    req.params.cardId,
+    { $pull: { likes: _id } },
+    { new: true, runValidators: true },
+  )
+    .then((card) => {
+      if (!card) {
+        return res
+          .status(NOT_FOUND_ERROR)
+          .send({ message: 'Передан несуществующий _id карточки' });
+      }
+      return res.send(card);
+    })
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        return res
+          .status(BAD_REQUEST_ERROR)
+          .send({ message: 'Переданы некорректные данные для снятия лайка' });
+      }
       return res
-        .status(NOT_FOUND_ERROR)
-        .send({ message: 'Передан несуществующий _id карточки' });
-    }
-    return res.send(card);
-  })
-  .catch((err) => {
-    if (err.name === 'CastError') {
-      return res
-        .status(BAD_REQUEST_ERROR)
-        .send({ message: 'Переданы некорректные данные для снятия лайка' });
-    }
-    return res
-      .status(INTERNAL_SERVER_ERROR)
-      .send({ message: 'Произошла ошибка' });
-  });
+        .status(INTERNAL_SERVER_ERROR)
+        .send({ message: 'Произошла ошибка' });
+    });
+};

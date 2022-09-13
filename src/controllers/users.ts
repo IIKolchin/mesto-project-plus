@@ -8,6 +8,7 @@ import {
   NOT_FOUND_ERROR,
   BAD_REQUEST_ERROR,
 } from '../utils/constants';
+import { IUserRequest, SessionRequest } from '../types';
 
 export const login = (req: Request, res: Response) => {
   const { email, password } = req.body;
@@ -21,6 +22,13 @@ export const login = (req: Request, res: Response) => {
     .catch((err) => {
       res.status(401).send({ message: err.message });
     });
+};
+
+export const getCurrentUser = (req: SessionRequest, res: Response) => {
+  const { _id } = req.user as IUserRequest;
+  return User.findById(_id)
+    .then((user) => res.send(user))
+    .catch(() => res.status(INTERNAL_SERVER_ERROR).send({ message: 'Произошла ошибка' }));
 };
 
 export const getUsers = (req: Request, res: Response) => User.find({})
@@ -72,12 +80,12 @@ export const createUser = (req: Request, res: Response) => {
     });
 };
 
-export const updateUser = (req: Request, res: Response) => {
+export const updateUser = (req: SessionRequest, res: Response) => {
   const { name, about } = req.body;
-  const id = req.user._id;
+  const { _id } = req.user as IUserRequest;
 
   return User.findByIdAndUpdate(
-    id,
+    _id,
     { name, about },
     { new: true, runValidators: true },
   )
@@ -101,16 +109,16 @@ export const updateUser = (req: Request, res: Response) => {
     });
 };
 
-export const updateAvatar = (req: Request, res: Response) => {
+export const updateAvatar = (req: SessionRequest, res: Response) => {
   const { avatar } = req.body;
-  const id = req.user._id;
+  const { _id } = req.user as IUserRequest;
   if (!isURL(avatar)) {
     return res.status(BAD_REQUEST_ERROR).send({
       message: 'Переданы некорректные данные при обновлении аватара',
     });
   }
   return User.findByIdAndUpdate(
-    id,
+    _id,
     { avatar },
     { new: true, runValidators: true },
   )
