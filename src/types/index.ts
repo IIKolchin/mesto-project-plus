@@ -31,3 +31,10 @@ export interface SessionRequest extends Request {
 export interface IUserRequest extends Request {
     _id: Schema.Types.ObjectId;
 }
+
+export interface IError {
+  statusCode?: number;
+  message: string;
+  name?: string;
+  code?: number;
+}

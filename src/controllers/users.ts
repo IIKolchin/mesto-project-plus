@@ -1,16 +1,14 @@
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import isURL from '../utils/index';
+import { isURL, operationalErrorsHandler } from '../utils/index';
 import User from '../models/user';
-import {
-  INTERNAL_SERVER_ERROR,
-  NOT_FOUND_ERROR,
-  BAD_REQUEST_ERROR,
-} from '../utils/constants';
 import { IUserRequest, SessionRequest } from '../types';
+import NotFoundError from '../errors/not-found-err';
+import BadRequestError from '../errors/bad-request-err';
+import ConflictError from '../errors/conflict-err';
 
-export const login = (req: Request, res: Response) => {
+export const login = (req: Request, res: Response, next: NextFunction) => {
   const { email, password } = req.body;
 
   return User.findUserByCredentials(email, password)
@@ -24,68 +22,56 @@ export const login = (req: Request, res: Response) => {
         token: jwtToken,
       });
     })
-    .catch((err) => {
-      res.status(401).send({ message: err.message });
-    });
+    .catch(next);
 };
 
-export const getCurrentUser = (req: SessionRequest, res: Response) => {
+export const getCurrentUser = (req: SessionRequest, res: Response, next: NextFunction) => {
   const { _id } = req.user as IUserRequest;
   return User.findById(_id)
     .then((user) => res.send(user))
-    .catch(() => res.status(INTERNAL_SERVER_ERROR).send({ message: 'Произошла ошибка' }));
+    .catch(next);
 };
 
-export const getUsers = (req: Request, res: Response) => User.find({})
+export const getUsers = (req: Request, res: Response, next: NextFunction) => User.find({})
   .then((users) => res.send(users))
-  .catch(() => res.status(INTERNAL_SERVER_ERROR).send({ message: 'Произошла ошибка' }));
+  .catch(next);
 
-export const getUserById = (req: Request, res: Response) => {
+export const getUserById = (req: Request, res: Response, next: NextFunction) => {
   User.findById(req.params.userId)
     .then((user) => {
       if (!user) {
-        return res
-          .status(NOT_FOUND_ERROR)
-          .send({ message: 'Запрашиваемый пользователь не найден' });
+        throw new NotFoundError('Запрашиваемый пользователь не найден');
       }
       return res.send(user);
     })
     .catch((err) => {
-      if (err.name === 'CastError') {
-        return res.status(BAD_REQUEST_ERROR).send({
-          message:
-            'Переданы некорректные данные для запрашиваемого пользователя',
-        });
-      }
-      return res
-        .status(INTERNAL_SERVER_ERROR)
-        .send({ message: 'Произошла ошибка' });
+      operationalErrorsHandler(err, next);
     });
 };
 
-export const createUser = (req: Request, res: Response) => {
+export const createUser = (req: Request, res: Response, next: NextFunction) => {
   const {
     name, about, avatar, email, password,
   } = req.body;
 
-  return bcrypt.hash(password, 10)
-    .then((hash: string) => User.create({
-      name, about, avatar, email, password: hash,
-    }))
-    .then((user) => res.send(user))
-    .catch((err) => {
-      if (err.name === 'ValidationError') {
-        return res.status(BAD_REQUEST_ERROR).send({
-          message: 'Переданы некорректные данные при создании пользователя',
-        });
+  User.find({ email })
+    .then((user) => {
+      if (user.length > 0) {
+        throw new ConflictError('Пользователь уже существует');
+      } else {
+        return bcrypt.hash(password, 10)
+          .then((hash: string) => User.create({
+            name, about, avatar, email, password: hash,
+          }))
+          .then((newUser) => res.send(newUser))
+          .catch((err) => {
+            operationalErrorsHandler(err, next);
+          });
       }
-      return res
-        .status(INTERNAL_SERVER_ERROR)
-        .send({ message: 'Произошла ошибка' });
-    });
+    }).catch(next);
 };
 
-export const updateUser = (req: SessionRequest, res: Response) => {
+export const updateUser = (req: SessionRequest, res: Response, next: NextFunction) => {
   const { name, about } = req.body;
   const { _id } = req.user as IUserRequest;
 
@@ -96,31 +82,20 @@ export const updateUser = (req: SessionRequest, res: Response) => {
   )
     .then((user) => {
       if (!user) {
-        return res
-          .status(NOT_FOUND_ERROR)
-          .send({ message: 'Пользователь не найден' });
+        throw new NotFoundError('Пользователь не найден');
       }
       return res.send(user);
     })
     .catch((err) => {
-      if (err.name === 'ValidationError') {
-        return res.status(BAD_REQUEST_ERROR).send({
-          message: 'Переданы некорректные данные при обновлении профиля',
-        });
-      }
-      return res
-        .status(INTERNAL_SERVER_ERROR)
-        .send({ message: 'Произошла ошибка' });
+      operationalErrorsHandler(err, next);
     });
 };
 
-export const updateAvatar = (req: SessionRequest, res: Response) => {
+export const updateAvatar = (req: SessionRequest, res: Response, next: NextFunction) => {
   const { avatar } = req.body;
   const { _id } = req.user as IUserRequest;
   if (!isURL(avatar)) {
-    return res.status(BAD_REQUEST_ERROR).send({
-      message: 'Переданы некорректные данные при обновлении аватара',
-    });
+    throw new BadRequestError('Переданы некорректные данные при обновлении аватара');
   }
   return User.findByIdAndUpdate(
     _id,
@@ -129,12 +104,9 @@ export const updateAvatar = (req: SessionRequest, res: Response) => {
   )
     .then((user) => {
       if (!user) {
-        return res
-          .status(NOT_FOUND_ERROR)
-          .send({ message: 'Пользователь не найден' });
+        throw new NotFoundError('Пользователь не найден');
       }
-
       return res.send(user);
     })
-    .catch(() => res.status(INTERNAL_SERVER_ERROR).send({ message: 'Произошла ошибка' }));
+    .catch(next);
 };
