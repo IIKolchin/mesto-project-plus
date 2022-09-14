@@ -35,27 +35,35 @@ export const createCard = (req: SessionRequest, res: Response) => {
     });
 };
 
-export const deleteCard = (req: Request, res: Response) => Card.findByIdAndRemove(req.params.cardId)
-  .then((card) => {
-    if (!card) {
-      return res
-        .status(NOT_FOUND_ERROR)
-        .send({ message: 'Запрашиваемая карточка не найдена' });
-    }
-    return res.send({ data: card });
-  })
-  .catch((err) => {
-    if (err.name === 'CastError') {
-      return res
-        .status(BAD_REQUEST_ERROR)
-        .send({
-          message: 'Переданы некорректные данные для удаления карточки',
+export const deleteCard = (req: SessionRequest, res: Response) => {
+  const { _id } = req.user as IUserRequest;
+  Card.findById(req.params.cardId)
+    .then((card) => {
+      if (!card) {
+        return res
+          .status(NOT_FOUND_ERROR)
+          .send({ message: 'Запрашиваемая карточка не найдена' });
+      }
+      if (card.owner.toString() === _id.toString()) {
+        return card.remove().then(() => res.send({ data: card })).catch(() => {
+          res.status(403).send({ message: 'Доступ к запрошенному ресурсу запрещен' });
         });
-    }
-    return res
-      .status(INTERNAL_SERVER_ERROR)
-      .send({ message: 'Произошла ошибка' });
-  });
+      }
+      return res.status(403).send({ message: 'Доступ к запрошенному ресурсу запрещен' });
+    })
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        return res
+          .status(BAD_REQUEST_ERROR)
+          .send({
+            message: 'Переданы некорректные данные для удаления карточки',
+          });
+      }
+      return res
+        .status(INTERNAL_SERVER_ERROR)
+        .send({ message: 'Произошла ошибка' });
+    });
+};
 
 export const likeCard = (req: SessionRequest, res: Response) => {
   const { _id } = req.user as IUserRequest;

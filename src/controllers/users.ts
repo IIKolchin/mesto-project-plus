@@ -15,8 +15,13 @@ export const login = (req: Request, res: Response) => {
 
   return User.findUserByCredentials(email, password)
     .then((user) => {
+      const jwtToken = jwt.sign({ _id: user._id }, 'strong-secret', { expiresIn: '7d' });
+      res.cookie('jwt', jwtToken, {
+        maxAge: 3600000 * 24 * 7,
+        httpOnly: true,
+      });
       res.send({
-        token: jwt.sign({ _id: user._id }, 'strong-secret', { expiresIn: '7d' }),
+        token: jwtToken,
       });
     })
     .catch((err) => {
