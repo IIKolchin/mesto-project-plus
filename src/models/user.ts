@@ -1,6 +1,4 @@
-import {
-  model, Schema,
-} from 'mongoose';
+import { model, Schema } from 'mongoose';
 import validator from 'validator';
 import bcrypt from 'bcrypt';
 import { IUser, UserModel } from '../types';
@@ -25,6 +23,12 @@ const userSchema = new Schema<IUser, UserModel>(
       type: String,
       required: [true, 'Обязательное поле'],
       default: 'https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png',
+      validate: {
+        validator(v: string) {
+          return /^(http|https):\/\/(?:www\.|(?!www))[^ "]+\.([a-z]{2,})/.test(v);
+        },
+        message: 'URL не соответствует формату',
+      },
     },
     email: {
       type: String,

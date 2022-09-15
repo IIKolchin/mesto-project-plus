@@ -1,12 +1,7 @@
 import { Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import { handleAuthError } from '../utils';
 import { SessionRequest } from '../types';
-
-const handleAuthError = (res: Response) => {
-  res
-    .status(401)
-    .send({ message: 'Необходима авторизация' });
-};
 
 const extractBearerToken = (header: string) => header.replace('Bearer ', '');
 

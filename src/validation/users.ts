@@ -1,6 +1,4 @@
-import {
-  celebrate, Joi, Segments,
-} from 'celebrate';
+import { celebrate, Joi, Segments } from 'celebrate';
 
 export const getUserByIdValidate = celebrate({
   [Segments.PARAMS]: Joi.object().keys({
@@ -30,10 +28,10 @@ export const loginValidate = celebrate({
 
 export const createUserValidate = celebrate({
   [Segments.BODY]: Joi.object().keys({
-    name: Joi.string().required().min(2).max(30),
-    about: Joi.string().required().min(2).max(200),
-    avatar: Joi.string().required().domain(),
+    name: Joi.string().min(2).max(30),
+    about: Joi.string().min(2).max(200),
+    avatar: Joi.string().domain(),
     email: Joi.string().required().email(),
     password: Joi.string().required().min(6),
-  }),
+  }).unknown(true),
 });

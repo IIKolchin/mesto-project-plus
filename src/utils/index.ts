@@ -1,17 +1,7 @@
-import { NextFunction } from 'express';
+import { Response, NextFunction } from 'express';
 import { IError } from '../types';
 import ConflictError from '../errors/conflict-err';
 import BadRequestError from '../errors/not-found-err';
-
-export const isURL = (str: string | URL) => {
-  try {
-    // eslint-disable-next-line no-new
-    new URL(str);
-    return true;
-  } catch {
-    return false;
-  }
-};
 
 export const operationalErrorsHandler = (err: IError, next: NextFunction) => {
   if (err.name === 'ValidationError' || err.name === 'CastError') {
@@ -21,4 +11,10 @@ export const operationalErrorsHandler = (err: IError, next: NextFunction) => {
   } else {
     next(err);
   }
+};
+
+export const handleAuthError = (res: Response) => {
+  res
+    .status(401)
+    .send({ message: 'Необходима авторизация' });
 };
