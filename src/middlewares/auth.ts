@@ -1,7 +1,7 @@
 import { Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { handleAuthError } from '../utils';
 import { SessionRequest } from '../types';
+import UnauthorizedError from '../errors/unauthorized-err';
 
 const extractBearerToken = (header: string) => header.replace('Bearer ', '');
 
@@ -10,7 +10,7 @@ export default (req: SessionRequest, res: Response, next: NextFunction) => {
   const { authorization } = req.headers;
 
   if (!authorization || !authorization.startsWith('Bearer ')) {
-    return handleAuthError(res);
+    throw new UnauthorizedError('Необходима авторизация');
   }
   const token = extractBearerToken(authorization);
   let payload;
@@ -18,7 +18,7 @@ export default (req: SessionRequest, res: Response, next: NextFunction) => {
   try {
     payload = jwt.verify(token, 'strong-secret');
   } catch (err) {
-    return handleAuthError(res);
+    throw new UnauthorizedError('Необходима авторизация');
   }
 
   req.user = payload;

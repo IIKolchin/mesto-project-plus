@@ -8,8 +8,8 @@ import { createUser, login } from './controllers/users';
 import auth from './middlewares/auth';
 import { requestLogger, errorLogger } from './middlewares/logger';
 import { createUserValidate, loginValidate } from './validation/users';
+import { PORT } from './utils/constants';
 
-const { PORT = 3000 } = process.env;
 const app = express();
 
 app.use(express.json());
