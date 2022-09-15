@@ -15,7 +15,7 @@ export const updateUserValidate = celebrate({
 
 export const updateAvatarValidate = celebrate({
   [Segments.BODY]: Joi.object().keys({
-    avatar: Joi.string().required().domain(),
+    avatar: Joi.string().required().uri(),
   }),
 });
 
@@ -30,7 +30,7 @@ export const createUserValidate = celebrate({
   [Segments.BODY]: Joi.object().keys({
     name: Joi.string().min(2).max(30),
     about: Joi.string().min(2).max(200),
-    avatar: Joi.string().domain(),
+    avatar: Joi.string().uri(),
     email: Joi.string().required().email(),
     password: Joi.string().required().min(6),
   }).unknown(true),

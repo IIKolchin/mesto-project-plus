@@ -3,7 +3,7 @@ import { celebrate, Joi, Segments } from 'celebrate';
 export const createCardValidate = celebrate({
   [Segments.BODY]: Joi.object().keys({
     name: Joi.string().required().min(2).max(30),
-    link: Joi.string().required(),
+    link: Joi.string().required().uri(),
   }),
 });
 

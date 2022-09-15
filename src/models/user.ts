@@ -8,21 +8,18 @@ const userSchema = new Schema<IUser, UserModel>(
   {
     name: {
       type: String,
-      required: [true, 'Обязательное поле'],
       minlength: [2, 'Должно быть не менее 2 символов'],
       maxlength: [30, 'Должно быть не более 30 символов'],
       default: 'Жак-Ив Кусто',
     },
     about: {
       type: String,
-      required: [true, 'Обязательное поле'],
       minlength: [2, 'Должно быть не менее 2 символов'],
       maxlength: [200, 'Должно быть не более 200 символов'],
       default: 'Исследователь',
     },
     avatar: {
       type: String,
-      required: [true, 'Обязательное поле'],
       default: 'https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png',
       validate: {
         validator(v: string) {

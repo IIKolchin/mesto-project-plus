@@ -25,8 +25,15 @@ export const login = (req: Request, res: Response, next: NextFunction) => {
 export const getCurrentUser = (req: SessionRequest, res: Response, next: NextFunction) => {
   const { _id } = req.user as IUserRequest;
   return User.findById(_id)
-    .then((user) => res.send(user))
-    .catch(next);
+    .then((user) => {
+      if (!user) {
+        throw new NotFoundError('Запрашиваемый пользователь не найден');
+      }
+      return res.send(user);
+    })
+    .catch((err) => {
+      operationalErrorsHandler(err, next);
+    });
 };
 
 export const getUsers = (req: Request, res: Response, next: NextFunction) => User.find({})
