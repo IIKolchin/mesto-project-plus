@@ -1,6 +1,7 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import { errors } from 'celebrate';
+import cookieParser from 'cookie-parser';
 import errorHandler from './middlewares/error-handler';
 import usersRouter from './routes/users';
 import cardsRouter from './routes/cards';
@@ -21,6 +22,8 @@ app.use(requestLogger);
 
 app.post('/signin', loginValidate, login);
 app.post('/signup', createUserValidate, createUser);
+
+app.use(cookieParser());
 app.use(auth);
 app.use('/users', usersRouter);
 app.use('/cards', cardsRouter);

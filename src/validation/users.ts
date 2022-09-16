@@ -1,8 +1,9 @@
 import { celebrate, Joi, Segments } from 'celebrate';
+import { idValidator } from '../utils';
 
 export const getUserByIdValidate = celebrate({
   [Segments.PARAMS]: Joi.object().keys({
-    userId: Joi.string().alphanum().length(24),
+    userId: Joi.string().required().custom(idValidator),
   }),
 });
 

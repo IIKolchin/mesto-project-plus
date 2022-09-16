@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import ForbiddenError from '../errors/forbidden-err';
-import operationalErrorsHandler from '../utils/index';
+import { operationalErrorsHandler } from '../utils/index';
 import Card from '../models/card';
 import { IUserRequest, SessionRequest } from '../types';
 import NotFoundError from '../errors/not-found-err';

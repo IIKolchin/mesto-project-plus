@@ -3,20 +3,18 @@ import jwt from 'jsonwebtoken';
 import { SessionRequest } from '../types';
 import UnauthorizedError from '../errors/unauthorized-err';
 
-const extractBearerToken = (header: string) => header.replace('Bearer ', '');
-
 // eslint-disable-next-line consistent-return
 export default (req: SessionRequest, res: Response, next: NextFunction) => {
-  const { authorization } = req.headers;
+  const authorization = req.cookies.jwt;
 
-  if (!authorization || !authorization.startsWith('Bearer ')) {
+  if (!authorization) {
     throw new UnauthorizedError('Необходима авторизация');
   }
-  const token = extractBearerToken(authorization);
+
   let payload;
 
   try {
-    payload = jwt.verify(token, 'strong-secret');
+    payload = jwt.verify(authorization, 'strong-secret');
   } catch (err) {
     throw new UnauthorizedError('Необходима авторизация');
   }

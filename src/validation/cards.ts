@@ -1,4 +1,5 @@
 import { celebrate, Joi, Segments } from 'celebrate';
+import { idValidator } from '../utils';
 
 export const createCardValidate = celebrate({
   [Segments.BODY]: Joi.object().keys({
@@ -9,6 +10,6 @@ export const createCardValidate = celebrate({
 
 export const cardIdValidate = celebrate({
   [Segments.PARAMS]: Joi.object().keys({
-    cardId: Joi.string().alphanum().length(24),
+    cardId: Joi.string().required().custom(idValidator),
   }),
 });
