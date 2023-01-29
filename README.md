@@ -1,14 +1,14 @@
-# Бэкенд Mesto. Каркас API Mesto
+# Mesto backend. Mesto API Framework
 
-## Обзор
-Бэкенд для сервиса Место, который умеет проверять токены, регистрировать и авторизовывать пользователей, сохранять и отдавать карточки, запоминать, когда кто-то поставил лайк или передумал и убрал его.
+## Overview
+The backend for the Place service, which is able to check tokens, register and authorize users, save and give cards, remember when someone put a like or changed his mind and removed it.
 
-## Используемые технологии и решения
-- Typescript в качестве основного языка проекта
-- Mongodb и ODM Mongoose для хранения данных пользователей
-- Node.js в качестве среды выполнения
+## Technologies and solutions used
+- Typescript as the main language of the project
+- Mongodb and ODM Mongoose for storing user data
+- Node.js as a runtime environment
 
-## Запуск
+## Launch
 
-Запуск проекта производится командой
+The project is launched by the command
 ### `npm run start`
